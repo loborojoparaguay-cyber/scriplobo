@@ -24,7 +24,7 @@ system_info() {
 
 protocol_status() {
     echo -e "${C_BOLD}--- Estado de protocolos ---${C_RESET}"
-    for svc in ssh dropbear stunnel4 wg-quick@wg0 xray openvpn-server@server hysteria-server fail2ban; do
+    for svc in ssh dropbear stunnel4 wg-quick@wg0 xray openvpn-server@server hysteria-server badvpn-udpgw fail2ban; do
         if systemctl is-active --quiet "$svc" 2>/dev/null; then
             echo -e "  ${C_GREEN}[ON]${C_RESET}  $svc"
         else

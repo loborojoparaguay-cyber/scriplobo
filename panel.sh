@@ -14,7 +14,7 @@ set -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
 
-for m in users proto_ssh proto_stunnel proto_wireguard proto_xray proto_openvpn proto_hysteria ssl hardening monitor license; do
+for m in users proto_ssh proto_stunnel proto_wireguard proto_xray proto_openvpn proto_hysteria proto_badvpn ssl hardening monitor license; do
     source "$SCRIPT_DIR/modules/${m}.sh"
 done
 
@@ -90,6 +90,9 @@ menu_protocols() {
         echo "[18] Ver link de conexión Hysteria de un usuario"
         echo "[19] Editar banner de conexión"
         echo "[20] Cambiar puerto de SSH"
+        echo "[21] Instalar BadVPN UDPGW (mejora ping de juegos/VoIP en SSH/Dropbear)"
+        echo "[22] Ver estado de BadVPN UDPGW"
+        echo "[23] Desinstalar BadVPN UDPGW"
         echo " [0] Volver"
         read -rp "Opción: " op
         case "$op" in
@@ -113,6 +116,9 @@ menu_protocols() {
             18) u=$(ask "Usuario"); show_client_uri "$u"; pause ;;
             19) set_banner ;;
             20) pr=$(ask "Nuevo puerto SSH"); change_ssh_port "$pr"; pause ;;
+            21) pr=$(ask "Puerto interno UDPGW [7300]"); mc=$(ask "Máx clientes [999]"); install_badvpn "${pr:-7300}" "${mc:-999}"; pause ;;
+            22) status_badvpn; pause ;;
+            23) uninstall_badvpn; pause ;;
             0) break ;;
         esac
     done

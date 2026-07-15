@@ -16,12 +16,25 @@ auditables y de código abierto — sin componentes de origen desconocido.
 | Xray (VLESS+TLS) | 443 | Tráfico camuflado como HTTPS, requiere dominio + certificado real |
 | OpenVPN | 1194/udp | PKI propia por cliente (easy-rsa), cifrado AES-256-GCM |
 | Hysteria 2 | 443/udp | QUIC + TLS 1.3, control de congestión Brutal — mejor "ping" en redes con pérdida/latencia alta |
+| BadVPN UDPGW | 7300 (interno, 127.0.0.1) | Relay de UDP *dentro* del túnel SSH/Dropbear — habilita juegos/VoIP sobre SOCKS |
 
-Protocolos deliberadamente **excluidos** por no aportar seguridad real
-o no ser estándares auditables: BadVPN/UDPGW (sin cifrado propio, solo
-reenvía paquetes UDP sobre un túnel ya existente), Squid como "túnel"
-(es solo un proxy HTTP), "UDP-Custom"/"SSHGo" (scripts caseros sin
+Protocolos deliberadamente **excluidos** por no ser estándares
+auditables o no aportar valor real: Squid como "túnel" (es solo un
+proxy HTTP, sin cifrado), "UDP-Custom"/"SSHGo" (scripts caseros sin
 documentación pública verificable).
+
+### Sobre BadVPN/UDPGW (corrección importante)
+
+En una primera versión de este panel se excluyó BadVPN por error,
+asumiendo que "no tener cifrado propio" era una debilidad. Esa lectura
+estaba mal: BadVPN **no es un túnel independiente**, es un relay que
+vive dentro de un túnel SSH/Dropbear ya cifrado — el tráfico UDP del
+cliente (juegos, VoIP) llega primero por SSH y luego `badvpn-udpgw`
+solo lo reenvía a su destino real en internet. Por eso escucha
+únicamente en `127.0.0.1` y **nunca debe exponerse directamente a
+internet** en el firewall — su seguridad depende por completo del
+túnel SSH/Dropbear que ya lo protege. Se compila desde el código
+fuente oficial de [ambrop72/badvpn](https://github.com/ambrop72/badvpn).
 
 ### Sobre Hysteria 2 y por qué mejora el ping
 
@@ -55,6 +68,7 @@ vps-panel/
     ├── proto_xray.sh      # Xray VLESS+TLS + gestión de clientes
     ├── proto_openvpn.sh   # OpenVPN + easy-rsa
     ├── proto_hysteria.sh   # Hysteria 2 (QUIC/UDP) + sync de usuarios
+    ├── proto_badvpn.sh     # BadVPN UDPGW (relay UDP interno para SSH/Dropbear)
     ├── ssl.sh             # Certificados Let's Encrypt (acme.sh)
     ├── hardening.sh       # ufw + fail2ban
     └── monitor.sh         # Info de sistema y conexiones activas
