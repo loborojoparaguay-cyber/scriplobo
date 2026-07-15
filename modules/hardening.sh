@@ -16,6 +16,7 @@ install_firewall() {
     ufw allow 80/tcp    comment "ACME HTTP-01"
     ufw allow 51820/udp comment "WireGuard"
     ufw allow 1194/udp  comment "OpenVPN"
+    ufw allow 443/udp   comment "Hysteria 2 (QUIC)"
     ufw --force enable
     ok "Firewall (ufw) activo con reglas base."
 }

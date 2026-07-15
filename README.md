@@ -15,11 +15,30 @@ auditables y de código abierto — sin componentes de origen desconocido.
 | WireGuard | 51820/udp | VPN moderna recomendada (Curve25519/ChaCha20) |
 | Xray (VLESS+TLS) | 443 | Tráfico camuflado como HTTPS, requiere dominio + certificado real |
 | OpenVPN | 1194/udp | PKI propia por cliente (easy-rsa), cifrado AES-256-GCM |
+| Hysteria 2 | 443/udp | QUIC + TLS 1.3, control de congestión Brutal — mejor "ping" en redes con pérdida/latencia alta |
 
 Protocolos deliberadamente **excluidos** por no aportar seguridad real
-o no ser estándares auditables: BadVPN/UDPGW (sin cifrado propio),
-Squid como "túnel" (es solo un proxy HTTP), "UDP-Custom"/"SSHGo"
-(scripts caseros sin documentación pública verificable).
+o no ser estándares auditables: BadVPN/UDPGW (sin cifrado propio, solo
+reenvía paquetes UDP sobre un túnel ya existente), Squid como "túnel"
+(es solo un proxy HTTP), "UDP-Custom"/"SSHGo" (scripts caseros sin
+documentación pública verificable).
+
+### Sobre Hysteria 2 y por qué mejora el ping
+
+Hysteria 2 corre sobre QUIC (UDP) en vez de TCP, evitando el
+overhead de "handshake" y retransmisión de TCP. Usa un control de
+congestión propio (Brutal) pensado específicamente para redes con
+alta latencia o pérdida de paquetes — por eso suele sentirse "más
+rápido" que WireGuard/OpenVPN en conexiones móviles inestables,
+aunque WireGuard sigue siendo la opción más liviana en CPU para
+conexiones estables. Fuente: proyecto oficial
+[apernet/hysteria](https://github.com/apernet/hysteria) (Apache 2.0).
+
+Los usuarios de Hysteria se administran por separado con
+`add_hy_user`/`remove_hy_user` (usa el mismo usuario/contraseña que
+el resto del panel, pero requiere habilitarlo explícitamente porque
+Hysteria necesita la contraseña en texto claro para autenticar, a
+diferencia de SSH/Dropbear que solo guardan el hash del sistema).
 
 ## Estructura
 
@@ -35,6 +54,7 @@ vps-panel/
     ├── proto_wireguard.sh # WireGuard + gestión de peers
     ├── proto_xray.sh      # Xray VLESS+TLS + gestión de clientes
     ├── proto_openvpn.sh   # OpenVPN + easy-rsa
+    ├── proto_hysteria.sh   # Hysteria 2 (QUIC/UDP) + sync de usuarios
     ├── ssl.sh             # Certificados Let's Encrypt (acme.sh)
     ├── hardening.sh       # ufw + fail2ban
     └── monitor.sh         # Info de sistema y conexiones activas
@@ -63,7 +83,9 @@ dos tareas de cron:
 5. **Stunnel** con el certificado real, o **Xray** (VLESS+TLS) para
    máxima resistencia a inspección de tráfico.
 6. **WireGuard** como VPN principal recomendada para los clientes.
-7. Crear usuarios/clientes desde los menús correspondientes.
+7. **Hysteria 2** como opción premium de baja latencia (requiere el
+   mismo dominio/certificado que Xray/Stunnel).
+8. Crear usuarios/clientes desde los menús correspondientes.
 
 ## Requisito de sistema para el módulo de licencias
 

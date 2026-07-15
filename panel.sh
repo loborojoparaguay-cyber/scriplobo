@@ -14,7 +14,7 @@ set -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
 
-for m in users proto_ssh proto_stunnel proto_wireguard proto_xray proto_openvpn ssl hardening monitor license; do
+for m in users proto_ssh proto_stunnel proto_wireguard proto_xray proto_openvpn proto_hysteria ssl hardening monitor license; do
     source "$SCRIPT_DIR/modules/${m}.sh"
 done
 
@@ -84,8 +84,12 @@ menu_protocols() {
         echo "[12] Instalar OpenVPN"
         echo "[13] Agregar cliente OpenVPN"
         echo "[14] Eliminar cliente OpenVPN"
-        echo "[15] Editar banner de conexión"
-        echo "[16] Cambiar puerto de SSH"
+        echo "[15] Instalar Hysteria 2 (UDP/QUIC, baja latencia)"
+        echo "[16] Habilitar usuario en Hysteria"
+        echo "[17] Deshabilitar usuario en Hysteria"
+        echo "[18] Ver link de conexión Hysteria de un usuario"
+        echo "[19] Editar banner de conexión"
+        echo "[20] Cambiar puerto de SSH"
         echo " [0] Volver"
         read -rp "Opción: " op
         case "$op" in
@@ -103,8 +107,12 @@ menu_protocols() {
             12) pr=$(ask "Puerto [1194]"); pt=$(ask "Protocolo udp/tcp [udp]"); install_openvpn "${pr:-1194}" "${pt:-udp}"; pause ;;
             13) n=$(ask "Nombre del cliente"); add_client "$n"; pause ;;
             14) n=$(ask "Nombre del cliente"); remove_client "$n"; pause ;;
-            15) set_banner ;;
-            16) pr=$(ask "Nuevo puerto SSH"); change_ssh_port "$pr"; pause ;;
+            15) d=$(ask "Dominio (debe apuntar a este servidor)"); pr=$(ask "Puerto [443]"); install_hysteria "$d" "${pr:-443}"; pause ;;
+            16) u=$(ask "Usuario"); p=$(ask "Contraseña para Hysteria"); add_hy_user "$u" "$p"; pause ;;
+            17) u=$(ask "Usuario"); remove_hy_user "$u"; pause ;;
+            18) u=$(ask "Usuario"); show_client_uri "$u"; pause ;;
+            19) set_banner ;;
+            20) pr=$(ask "Nuevo puerto SSH"); change_ssh_port "$pr"; pause ;;
             0) break ;;
         esac
     done
