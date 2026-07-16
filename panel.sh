@@ -192,8 +192,8 @@ menu_monitor() {
 # --------------------------- Menú principal ---------------------------
 main_menu() {
     while true; do
-        header "MENU PRINCIPAL"
-        system_info
+        clear
+        dashboard
         echo
         echo " [1] Administrar usuarios (SSH/Dropbear)"
         echo " [2] Administrar protocolos"

@@ -11,6 +11,9 @@ export C_CYAN="\e[36m"
 export C_BOLD="\e[1m"
 export C_RESET="\e[0m"
 
+# --- Marca del panel (se muestra en el dashboard principal) ---
+export PANEL_BRAND="LoborojoPy"
+
 # --- Rutas base del panel ---
 export PANEL_HOME="/etc/vps-panel"
 export PANEL_DATA="$PANEL_HOME/data"
