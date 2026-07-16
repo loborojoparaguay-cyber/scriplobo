@@ -9,6 +9,11 @@
 #
 # Requiere un dominio propio apuntando al servidor + certificado real
 # (ver modules/ssl.sh) para que el TLS sea válido de verdad.
+#
+# minVersion se fija en "1.3" a proposito: TLS 1.3 elimina cifrados
+# debiles del protocolo (no depende de "acordarse" de deshabilitarlos
+# como en TLS 1.2), obliga forward secrecy, y reduce el handshake a
+# 1-RTT. Un cliente que solo soporte TLS 1.2 o menor sera rechazado.
 # =====================================================================
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
@@ -50,6 +55,7 @@ install_xray() {
         "network": "tcp",
         "security": "tls",
         "tlsSettings": {
+          "minVersion": "1.3",
           "certificates": [
             { "certificateFile": "${cert_dir}/fullchain.pem", "keyFile": "${cert_dir}/privkey.pem" }
           ]

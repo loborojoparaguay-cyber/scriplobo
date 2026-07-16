@@ -23,6 +23,22 @@ auditables o no aportar valor real: Squid como "túnel" (es solo un
 proxy HTTP, sin cifrado), "UDP-Custom"/"SSHGo" (scripts caseros sin
 documentación pública verificable).
 
+### TLS 1.3 forzado como mínimo en todos los protocolos que usan TLS
+
+TLS 1.3 (RFC 8446) reduce el handshake a 1 solo intercambio (vs 2 en
+TLS 1.2), elimina del protocolo los cifrados débiles/legacy en lugar
+de depender de que el administrador los deshabilite manualmente, y
+exige forward secrecy en toda conexión. El panel fuerza esta versión
+como mínima en cada protocolo que la soporta:
+
+| Protocolo | Cómo se fuerza | Nota |
+|---|---|---|
+| Xray (VLESS+TLS) | `"minVersion": "1.3"` en `tlsSettings` | Clientes con solo TLS 1.2 o menor son rechazados |
+| Stunnel | `sslVersionMin = TLSv1.3` | Igual |
+| OpenVPN | `tls-version-min 1.3` (server y cliente) | Requiere OpenVPN 2.4.6+/OpenSSL 1.1.1+ (Ubuntu 22.04/24.04 cumplen) |
+| Hysteria 2 | No requiere configuración | QUIC exige TLS 1.3 por especificación del protocolo, no existe modo TLS 1.2 sobre QUIC |
+| SSH/Dropbear | No aplica | SSH no usa TLS, usa su propio protocolo de cifrado (independiente de SSL/TLS) |
+
 ### Camuflaje de Xray con sitio señuelo (Nginx + fallback)
 
 Para que las conexiones VLESS+TLS sean lo más indistinguibles posible

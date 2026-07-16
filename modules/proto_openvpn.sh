@@ -4,6 +4,12 @@
 #
 # Usa easy-rsa para PKI propia (certificados por cliente, no solo
 # usuario/contraseña) — es el estándar de facto para OpenVPN.
+#
+# tls-version-min 1.3 requiere OpenVPN 2.4.6+ con OpenSSL 1.1.1+
+# (Ubuntu 22.04/24.04 ya cumplen). Clientes muy antiguos (antes de
+# 2019 aprox.) que no soporten TLS 1.3 no podran conectar -- para la
+# mayoria de apps cliente actuales (OpenVPN Connect, etc.) no es
+# problema.
 # =====================================================================
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
@@ -48,6 +54,7 @@ push "dhcp-option DNS 1.1.1.1"
 keepalive 10 120
 cipher AES-256-GCM
 auth SHA256
+tls-version-min 1.3
 user nobody
 group nogroup
 persist-key
@@ -93,6 +100,7 @@ persist-tun
 remote-cert-tls server
 cipher AES-256-GCM
 auth SHA256
+tls-version-min 1.3
 verb 3
 <ca>
 $(cat pki/ca.crt)

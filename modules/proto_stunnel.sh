@@ -30,6 +30,7 @@ cert = ${CERT_DIR}/stunnel.pem
 pid = /var/run/stunnel-vps-panel.pid
 socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
+sslVersionMin = TLSv1.3
 
 [ssh-tls]
 accept = ${listen_port}

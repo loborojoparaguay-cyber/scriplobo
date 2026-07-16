@@ -7,6 +7,12 @@
 # o pérdida de paquetes -- suele dar mejor "ping percibido" que TCP
 # clásico, que es justo lo que buscan tus clientes.
 #
+# Nota sobre TLS: QUIC (la base de Hysteria) EXIGE TLS 1.3 por
+# especificacion del protocolo mismo -- no existe forma de negociar
+# TLS 1.2 o inferior sobre QUIC. No requiere configuracion adicional
+# para forzarlo, a diferencia de TCP (Xray/Stunnel/OpenVPN) donde si
+# hay que fijarlo explicitamente.
+#
 # Fuente oficial: https://github.com/apernet/hysteria (Apache 2.0)
 # Instalador oficial: https://get.hy2.sh
 #

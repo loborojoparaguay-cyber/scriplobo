@@ -62,6 +62,10 @@ server {
     root ${DECOY_ROOT};
     index index.html;
 
+    # Nota: este bloque es solo HTTP interno (Xray ya termina el TLS
+    # 1.3 antes de reenviar aca). Si en el futuro se expone este sitio
+    # directamente con su propio TLS, usar: ssl_protocols TLSv1.3;
+
     location / {
         try_files \$uri \$uri/ =404;
     }
