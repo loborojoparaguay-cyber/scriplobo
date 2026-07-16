@@ -23,6 +23,28 @@ auditables o no aportar valor real: Squid como "túnel" (es solo un
 proxy HTTP, sin cifrado), "UDP-Custom"/"SSHGo" (scripts caseros sin
 documentación pública verificable).
 
+### Camuflaje de Xray con sitio señuelo (Nginx + fallback)
+
+Para que las conexiones VLESS+TLS sean lo más indistinguibles posible
+de un sitio HTTPS normal, el panel puede instalar un **sitio señuelo**
+con Nginx y vincularlo a Xray usando su mecanismo nativo de
+`fallbacks` (documentado en el proyecto oficial
+[XTLS/Xray-core](https://github.com/XTLS/Xray-core)):
+
+- Nginx escucha **solo en `127.0.0.1`** (nunca expuesto directamente
+  a internet) y sirve una página web real.
+- Xray escucha en el puerto público (443/tcp) con TLS real.
+- Si una conexión entrante **no** completa el handshake VLESS válido
+  (un escáner, un sistema de inspección de tráfico, alguien
+  investigando el dominio), Xray la reenvía automáticamente al sitio
+  señuelo — quien la mira desde afuera solo ve un sitio web normal.
+- Solo los clientes con la configuración VLESS/UUID correcta llegan
+  al túnel real.
+
+Orden de instalación: primero Xray (opción 9), luego el sitio señuelo
+(opción 24), y por último vincularlo (opción 25) usando el mismo
+puerto interno en ambos pasos (por defecto 8080).
+
 ### Sobre BadVPN/UDPGW (corrección importante)
 
 En una primera versión de este panel se excluyó BadVPN por error,
@@ -69,6 +91,7 @@ vps-panel/
     ├── proto_openvpn.sh   # OpenVPN + easy-rsa
     ├── proto_hysteria.sh   # Hysteria 2 (QUIC/UDP) + sync de usuarios
     ├── proto_badvpn.sh     # BadVPN UDPGW (relay UDP interno para SSH/Dropbear)
+    ├── proto_nginx.sh      # Sitio senuelo (Nginx) para camuflar Xray
     ├── ssl.sh             # Certificados Let's Encrypt (acme.sh)
     ├── hardening.sh       # ufw + fail2ban
     └── monitor.sh         # Info de sistema y conexiones activas

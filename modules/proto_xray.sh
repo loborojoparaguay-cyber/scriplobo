@@ -66,6 +66,35 @@ EOF
     ok "Xray (VLESS+TLS) activo en ${domain}:${port}"
 }
 
+# ---------------------------------------------------------------------
+# Vincula un sitio señuelo (Nginx, ver modules/proto_nginx.sh) al
+# inbound VLESS usando el mecanismo nativo de "fallbacks" de Xray:
+# cualquier conexión TLS que NO complete el handshake VLESS válido se
+# reenvía automáticamente al puerto local del señuelo, mostrando un
+# sitio web normal en vez de rechazar la conexión (lo cual delataría
+# que hay un proxy detrás). Documentado en el proyecto oficial
+# XTLS/Xray-core (inbound VLESS -> settings.fallbacks).
+# ---------------------------------------------------------------------
+link_decoy_fallback() {
+    local decoy_port="$1"
+    [[ -z "$decoy_port" ]] && { err "Debes indicar el puerto interno del sitio señuelo (ej. 8080)."; return 1; }
+    [[ -f "$XRAY_CONF" ]] || { err "Xray no está instalado/configurado todavía."; return 1; }
+
+    python3 - "$XRAY_CONF" "$decoy_port" <<'PYEOF'
+import json, sys
+conf_path, decoy_port = sys.argv[1], int(sys.argv[2])
+with open(conf_path) as f:
+    data = json.load(f)
+data["inbounds"][0]["settings"]["fallbacks"] = [{"dest": decoy_port}]
+with open(conf_path, "w") as f:
+    json.dump(data, f, indent=2)
+PYEOF
+
+    systemctl restart xray
+    ok "Xray ahora reenvía conexiones no válidas al sitio señuelo (127.0.0.1:${decoy_port})."
+    msg "Cualquiera que inspeccione tu dominio sin credenciales VLESS verá un sitio web normal."
+}
+
 # Agrega un cliente VLESS (genera UUID y link de conexión vless://)
 add_client() {
     local client_name="$1"
@@ -127,6 +156,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
         install)        install_xray "$2" "$3" ;;
         add_client)     add_client "$2" ;;
         remove_client)  remove_client "$2" ;;
-        *) echo "Uso: $0 {install <dominio> <puerto>|add_client <nombre>|remove_client <nombre>}" ;;
+        link_decoy)     link_decoy_fallback "$2" ;;
+        *) echo "Uso: $0 {install <dominio> <puerto>|add_client <nombre>|remove_client <nombre>|link_decoy <puerto_señuelo>}" ;;
     esac
 fi

@@ -17,6 +17,10 @@ install_firewall() {
     ufw allow 51820/udp comment "WireGuard"
     ufw allow 1194/udp  comment "OpenVPN"
     ufw allow 443/udp   comment "Hysteria 2 (QUIC)"
+    # Nota: el sitio senuelo (Nginx) NO se abre aca a proposito -- solo
+    # escucha en 127.0.0.1, nunca debe ser accesible directamente desde
+    # internet. Solo Xray (443/tcp, ya abierto arriba) debe recibir
+    # trafico publico y reenviar internamente al senuelo si corresponde.
     ufw --force enable
     ok "Firewall (ufw) activo con reglas base."
 }

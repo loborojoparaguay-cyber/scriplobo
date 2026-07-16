@@ -14,7 +14,7 @@ set -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
 
-for m in users proto_ssh proto_stunnel proto_wireguard proto_xray proto_openvpn proto_hysteria proto_badvpn ssl hardening monitor license; do
+for m in users proto_ssh proto_stunnel proto_wireguard proto_xray proto_openvpn proto_hysteria proto_badvpn proto_nginx ssl hardening monitor license; do
     source "$SCRIPT_DIR/modules/${m}.sh"
 done
 
@@ -95,6 +95,9 @@ menu_protocols() {
         echo "[21] Instalar BadVPN UDPGW (mejora ping de juegos/VoIP en SSH/Dropbear)"
         echo "[22] Ver estado de BadVPN UDPGW"
         echo "[23] Desinstalar BadVPN UDPGW"
+        echo "[24] Instalar sitio señuelo (Nginx) para camuflar Xray"
+        echo "[25] Vincular sitio señuelo a Xray (fallback)"
+        echo "[26] Ver estado del sitio señuelo"
         echo " [0] Volver"
         op=$(read_option)
         case "$op" in
@@ -121,6 +124,9 @@ menu_protocols() {
             21) pr=$(ask "Puerto interno UDPGW [7300]"); mc=$(ask "Máx clientes [999]"); install_badvpn "${pr:-7300}" "${mc:-999}"; pause ;;
             22) status_badvpn; pause ;;
             23) uninstall_badvpn; pause ;;
+            24) pr=$(ask "Puerto interno del señuelo [8080]"); install_decoy_site "${pr:-8080}"; pause ;;
+            25) pr=$(ask "Puerto interno del señuelo (el mismo usado en 24) [8080]"); link_decoy_fallback "${pr:-8080}"; pause ;;
+            26) decoy_status; pause ;;
             0) break ;;
             *) err "Opción inválida: '${op}'"; pause ;;
         esac
