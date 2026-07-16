@@ -11,7 +11,11 @@
 #   - Monitoreo del sistema y conexiones
 # =====================================================================
 set -o pipefail
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Resolvemos el enlace simbólico (ej. /usr/local/bin/vps-panel) al
+# archivo real antes de calcular SCRIPT_DIR -- si no, BASH_SOURCE[0]
+# apunta al enlace y todos los "source" de módulos fallan en silencio.
+REAL_SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd "$(dirname "$REAL_SELF")" && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
 
 for m in users proto_ssh proto_stunnel proto_wireguard proto_xray proto_openvpn proto_hysteria proto_badvpn proto_nginx ssl hardening monitor license; do
