@@ -18,7 +18,7 @@ REAL_SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 SCRIPT_DIR="$(cd "$(dirname "$REAL_SELF")" && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
 
-for m in users proto_ssh proto_stunnel proto_wireguard proto_xray proto_openvpn proto_hysteria proto_badvpn proto_nginx ssl hardening monitor license; do
+for m in users proto_ssh proto_stunnel proto_wireguard proto_xray proto_openvpn proto_hysteria proto_badvpn proto_nginx proto_wsssh ssl hardening monitor license; do
     source "$SCRIPT_DIR/modules/${m}.sh"
 done
 
@@ -102,6 +102,9 @@ menu_protocols() {
         echo "[24] Instalar sitio señuelo (Nginx) para camuflar Xray"
         echo "[25] Vincular sitio señuelo a Xray (fallback)"
         echo "[26] Ver estado del sitio señuelo"
+        echo "[27] Instalar WebSocket->SSH liviano (sin TLS propio, ideal celulares viejos)"
+        echo "[28] Cifrar WebSocket->SSH con Stunnel (wss:// / TLS 1.3)"
+        echo "[29] Ver estado de WebSocket->SSH"
         echo " [0] Volver"
         op=$(read_option)
         case "$op" in
@@ -131,6 +134,9 @@ menu_protocols() {
             24) pr=$(ask "Puerto interno del señuelo [8080]"); install_decoy_site "${pr:-8080}"; pause ;;
             25) pr=$(ask "Puerto interno del señuelo (el mismo usado en 24) [8080]"); link_decoy_fallback "${pr:-8080}"; pause ;;
             26) decoy_status; pause ;;
+            27) wp=$(ask "Puerto WebSocket [8880]"); sp=$(ask "Puerto SSH/Dropbear destino [22]"); install_wsssh "${wp:-8880}" "${sp:-22}"; pause ;;
+            28) sp=$(ask "Puerto público TLS [443]"); link_stunnel "${sp:-443}"; pause ;;
+            29) wsssh_status; pause ;;
             0) break ;;
             *) err "Opción inválida: '${op}'"; pause ;;
         esac

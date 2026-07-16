@@ -17,6 +17,7 @@ auditables y de código abierto — sin componentes de origen desconocido.
 | OpenVPN | 1194/udp | PKI propia por cliente (easy-rsa), cifrado AES-256-GCM |
 | Hysteria 2 | 443/udp | QUIC + TLS 1.3, control de congestión Brutal — mejor "ping" en redes con pérdida/latencia alta |
 | BadVPN UDPGW | 7300 (interno, 127.0.0.1) | Relay de UDP *dentro* del túnel SSH/Dropbear — habilita juegos/VoIP sobre SOCKS |
+| WebSocket->SSH | 8880/tcp (o 443/tcp si se cifra con Stunnel) | Puente liviano WS/WSS hacia SSH/Dropbear, sin la capa extra de parsing VLESS de Xray — ideal para celulares de gama baja |
 
 Protocolos deliberadamente **excluidos** por no ser estándares
 auditables o no aportar valor real: Squid como "túnel" (es solo un
@@ -60,6 +61,25 @@ con Nginx y vincularlo a Xray usando su mecanismo nativo de
 Orden de instalación: primero Xray (opción 9), luego el sitio señuelo
 (opción 24), y por último vincularlo (opción 25) usando el mismo
 puerto interno en ambos pasos (por defecto 8080).
+
+### WebSocket->SSH liviano (alternativa a Xray para hardware limitado)
+
+Xray (VLESS+TLS) agrega dos o tres capas de cifrado/parsing superpuestas
+(TLS 1.3 + protocolo VLESS + a veces SSH adentro), lo cual puede notarse
+en CPUs muy limitadas (celulares viejos/gama baja). Como alternativa
+más liviana, `modules/proto_wsssh.sh` usa
+[websockify](https://github.com/novnc/websockify) (LGPL, paquete
+oficial de Ubuntu/Debian) para traducir WebSocket <-> TCP crudo,
+reenviando directo al puerto de SSH/Dropbear -- sin agregar cifrado
+propio. La única capa de cifrado real es la de SSH mismo.
+
+- **Modo `ws://` (sin TLS):** el más liviano posible. El handshake
+  WebSocket inicial no va cifrado, pero el contenido SSH que viaja
+  adentro sí lo está (por SSH mismo).
+- **Modo `wss://` (con TLS 1.3):** se vincula a Stunnel (opción 28 del
+  menú) para cifrar también el handshake. Sigue siendo más liviano que
+  Xray porque no hay parsing de VLESS de por medio -- solo TLS + SSH,
+  en vez de TLS + VLESS + SSH.
 
 ### Sobre BadVPN/UDPGW (corrección importante)
 
@@ -108,6 +128,7 @@ vps-panel/
     ├── proto_hysteria.sh   # Hysteria 2 (QUIC/UDP) + sync de usuarios
     ├── proto_badvpn.sh     # BadVPN UDPGW (relay UDP interno para SSH/Dropbear)
     ├── proto_nginx.sh      # Sitio senuelo (Nginx) para camuflar Xray
+    ├── proto_wsssh.sh      # WebSocket->SSH liviano (websockify), alternativa a Xray
     ├── ssl.sh             # Certificados Let's Encrypt (acme.sh)
     ├── hardening.sh       # ufw + fail2ban
     └── monitor.sh         # Info de sistema y conexiones activas
