@@ -7,3 +7,4 @@ license_private.pem
 # Archivos locales de datos/pruebas
 data/
 *.log
+*.zip
