@@ -30,7 +30,8 @@ header() {
     echo -e "${C_RED}============================================================${C_RESET}"
 }
 
-ask() { read -rp "$1: " REPLY_VAL; echo "$REPLY_VAL"; }
+ask() { read -rp "$1: " REPLY_VAL; clean_input "$REPLY_VAL"; }
+read_option() { read -rp "Opción: " __op; clean_input "$__op"; }
 
 # --------------------------- Menú: Usuarios ---------------------------
 menu_users() {
@@ -47,7 +48,7 @@ menu_users() {
         echo " [9] Ver conexiones activas por usuario"
         echo "[10] Eliminar usuarios vencidos ahora"
         echo " [0] Volver"
-        read -rp "Opción: " op
+        op=$(read_option)
         case "$op" in
             1) u=$(ask "Usuario"); p=$(ask "Contraseña"); d=$(ask "Días de validez"); l=$(ask "Límite de conexiones"); create_user "$u" "$p" "$d" "$l"; pause ;;
             2) u=$(ask "Usuario"); p=$(ask "Contraseña"); h=$(ask "Horas de validez"); l=$(ask "Límite de conexiones"); create_temp_user "$u" "$p" "$h" "$l"; pause ;;
@@ -60,6 +61,7 @@ menu_users() {
             9) online_users; pause ;;
             10) purge_expired_users; pause ;;
             0) break ;;
+            *) err "Opción inválida: '${op}'"; pause ;;
         esac
     done
 }
@@ -94,7 +96,7 @@ menu_protocols() {
         echo "[22] Ver estado de BadVPN UDPGW"
         echo "[23] Desinstalar BadVPN UDPGW"
         echo " [0] Volver"
-        read -rp "Opción: " op
+        op=$(read_option)
         case "$op" in
             1) install_openssh; pause ;;
             2) pr=$(ask "Puerto Dropbear [442]"); install_dropbear "${pr:-442}"; pause ;;
@@ -120,6 +122,7 @@ menu_protocols() {
             22) status_badvpn; pause ;;
             23) uninstall_badvpn; pause ;;
             0) break ;;
+            *) err "Opción inválida: '${op}'"; pause ;;
         esac
     done
 }
@@ -136,7 +139,7 @@ menu_security() {
         echo " [6] Instalar Fail2ban"
         echo " [7] Ver estado de Fail2ban"
         echo " [0] Volver"
-        read -rp "Opción: " op
+        op=$(read_option)
         case "$op" in
             1) d=$(ask "Dominio"); issue_cert "$d"; pause ;;
             2) list_certs; pause ;;
@@ -146,6 +149,7 @@ menu_security() {
             6) install_fail2ban; pause ;;
             7) fail2ban_status; pause ;;
             0) break ;;
+            *) err "Opción inválida: '${op}'"; pause ;;
         esac
     done
 }
@@ -158,12 +162,13 @@ menu_monitor() {
         echo " [2] Estado de protocolos"
         echo " [3] Conexiones activas en vivo"
         echo " [0] Volver"
-        read -rp "Opción: " op
+        op=$(read_option)
         case "$op" in
             1) system_info; pause ;;
             2) protocol_status; pause ;;
             3) live_connections; pause ;;
             0) break ;;
+            *) err "Opción inválida: '${op}'"; pause ;;
         esac
     done
 }
@@ -180,7 +185,7 @@ main_menu() {
         echo " [4] Monitor del sistema"
         echo " [5] Info de licencia"
         echo " [0] Salir"
-        read -rp "Opción: " op
+        op=$(read_option)
         case "$op" in
             1) menu_users ;;
             2) menu_protocols ;;
@@ -188,6 +193,7 @@ main_menu() {
             4) menu_monitor ;;
             5) show_license_info; pause ;;
             0) echo "Saliendo..."; exit 0 ;;
+            *) err "Opción inválida: '${op}'"; pause ;;
         esac
     done
 }

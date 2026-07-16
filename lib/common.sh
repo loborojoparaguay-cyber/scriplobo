@@ -27,6 +27,15 @@ warn()   { echo -e "${C_YELLOW}[!]${C_RESET} $*"; }
 err()    { echo -e "${C_RED}[ERROR]${C_RESET} $*" >&2; }
 pause()  { read -rp "Presiona ENTER para continuar..." _; }
 
+# Algunas apps de terminal (SSH desde Android/ChromeOS, algunos clientes
+# web) envían un retorno de carro (\r) junto con el texto ingresado. Si
+# no se limpia, comparaciones como [[ "$op" == "1" ]] fallan en silencio
+# porque en realidad se compara "1\r" contra "1". Esta función limpia
+# ese carácter invisible y los espacios sobrantes de cualquier input.
+clean_input() {
+    printf '%s' "$1" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+}
+
 require_root() {
     if [[ "$(id -u)" -ne 0 ]]; then
         err "Este panel debe ejecutarse como root (usa sudo)."
