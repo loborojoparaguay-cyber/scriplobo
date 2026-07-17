@@ -59,6 +59,36 @@ _port_decoy()     { local v; v=$(cat "$PANEL_DATA/decoy_port" 2>/dev/null); [[ -
 _port_wsssh()     { local v; v=$(cat "$PANEL_DATA/wsssh_port" 2>/dev/null); [[ -n "$v" ]] && echo "$v" || echo "-"; }
 
 # ---------------------------------------------------------------------
+# Lista de protocolos "instalados" (config presente en el sistema),
+# usada por el dashboard para NO mostrar protocolos que nunca se
+# activaron. Cada entrada: "ETIQUETA:archivo_de_config:funcion_puerto"
+# ---------------------------------------------------------------------
+_installed_protocols() {
+    local defs=(
+        "SSH:/etc/ssh/sshd_config:_port_ssh"
+        "DROPBEAR:/etc/default/dropbear:_port_dropbear"
+        "STUNNEL(TLS):/etc/stunnel/vps-panel.conf:_port_stunnel"
+        "WIREGUARD:/etc/wireguard/wg0.conf:_port_wireguard"
+        "XRAY:/usr/local/etc/xray/config.json:_port_xray"
+        "OPENVPN:/etc/openvpn/server/server.conf:_port_openvpn"
+        "HYSTERIA2:/etc/hysteria/config.yaml:_port_hysteria"
+        "BADVPN(interno):/etc/systemd/system/badvpn-udpgw.service:_port_badvpn"
+        "SENUELO(interno):$PANEL_DATA/decoy_port:_port_decoy"
+        "WS->SSH:$PANEL_DATA/wsssh_port:_port_wsssh"
+    )
+    local d label conf fn
+    for d in "${defs[@]}"; do
+        label="${d%%:*}"
+        conf="${d#*:}"; conf="${conf%:*}"
+        fn="${d##*:}"
+        # SSH siempre se considera "instalado" (viene con el sistema)
+        if [[ "$label" == "SSH" || -f "$conf" ]]; then
+            echo "${label}:$($fn)"
+        fi
+    done
+}
+
+# ---------------------------------------------------------------------
 # Contadores de usuarios para el dashboard (activos / vencidos /
 # bloqueados / total), leyendo la misma base que modules/users.sh
 # ---------------------------------------------------------------------
@@ -115,11 +145,23 @@ dashboard() {
     echo -e " Fecha: $(date +%Y-%m-%d)        Hora: $(date +%H:%M:%S)"
     echo -e " CPU núcleos: ${cpu_cores}      RAM: ${ram_used}MB / ${ram_total}MB usados (libre: ${ram_free}MB)"
     echo -e "${C_CYAN}------------------------------------------------------------${C_RESET}"
-    printf "  %-22s %-8s   %-22s %-8s\n" "SSH: $(_port_ssh)" "" "DROPBEAR: $(_port_dropbear)" ""
-    printf "  %-22s %-8s   %-22s %-8s\n" "STUNNEL(TLS): $(_port_stunnel)" "" "WIREGUARD: $(_port_wireguard)" ""
-    printf "  %-22s %-8s   %-22s %-8s\n" "XRAY: $(_port_xray)" "" "OPENVPN: $(_port_openvpn)" ""
-    printf "  %-22s %-8s   %-22s %-8s\n" "HYSTERIA2: $(_port_hysteria)" "" "BADVPN(interno): $(_port_badvpn)" ""
-    printf "  %-22s %-8s   %-22s %-8s\n" "SENUELO(interno): $(_port_decoy)" "" "WS->SSH: $(_port_wsssh)" ""
+
+    # Solo se muestran los protocolos que ya están instalados. Se
+    # imprimen de a 2 por línea (estilo tabla), sin dejar huecos de
+    # protocolos aún no activados.
+    local -a instalados
+    mapfile -t instalados < <(_installed_protocols)
+    if [[ ${#instalados[@]} -eq 0 ]]; then
+        echo "  (Ningún protocolo instalado todavía. Ve a 'Administrar protocolos'.)"
+    else
+        local i entry left right
+        for ((i=0; i<${#instalados[@]}; i+=2)); do
+            left="${instalados[$i]/:/: }"
+            right=""
+            [[ -n "${instalados[$((i+1))]}" ]] && right="${instalados[$((i+1))]/:/: }"
+            printf "  %-30s %-30s\n" "$left" "$right"
+        done
+    fi
     echo -e "${C_CYAN}============================================================${C_RESET}"
 }
 
