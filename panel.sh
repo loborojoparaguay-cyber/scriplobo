@@ -154,6 +154,7 @@ menu_security() {
         echo " [5] Cerrar puerto"
         echo " [6] Instalar Fail2ban"
         echo " [7] Ver estado de Fail2ban"
+        echo " [8] Reparar certificado ya emitido (fix instalación)"
         echo " [0] Volver"
         op=$(read_option)
         case "$op" in
@@ -164,6 +165,7 @@ menu_security() {
             5) p=$(ask "Puerto"); pt=$(ask "Protocolo tcp/udp [tcp]"); close_port "$p" "${pt:-tcp}"; pause ;;
             6) install_fail2ban; pause ;;
             7) fail2ban_status; pause ;;
+            8) d=$(ask "Dominio"); repair_cert "$d"; pause ;;
             0) break ;;
             *) err "Opción inválida: '${op}'"; pause ;;
         esac
