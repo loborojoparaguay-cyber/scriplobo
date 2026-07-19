@@ -41,6 +41,11 @@ HANDSHAKE_RESPONSE = (
 
 
 async def _pipe(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+    """Copia bytes de reader a writer hasta que un lado cierre. NO
+    cierra 'writer' al terminar -- eso lo decide handle_client cuando
+    AMBOS sentidos terminaron, para no cortar a mitad de camino el
+    sentido contrario si un lado hace una pausa breve (ej. durante el
+    intercambio de llaves SSH, que va en varias rondas separadas)."""
     try:
         while True:
             data = await reader.read(65536)
@@ -50,17 +55,22 @@ async def _pipe(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> N
             await writer.drain()
     except (ConnectionResetError, BrokenPipeError, asyncio.CancelledError):
         pass
-    finally:
-        try:
-            writer.close()
-        except Exception:
-            pass
 
 
 async def _read_initial_request(reader: asyncio.StreamReader) -> bytes:
-    """Lee y descarta el handshake HTTP inicial (headers hasta la
-    linea vacia). No valida su contenido a proposito: el cliente solo
-    necesita que la conexion "parezca" HTTP, no cumplir RFC 6455."""
+    """Lee y descarta SOLO el handshake HTTP inicial (headers hasta la
+    linea vacia \r\n\r\n). No valida su contenido a proposito: el
+    cliente solo necesita que la conexion "parezca" HTTP, no cumplir
+    RFC 6455.
+
+    IMPORTANTE: algunos clientes (ej. HTTP Custom) mandan el handshake
+    y el primer paquete SSH pegados en un solo TCP write, sin esperar
+    la respuesta 101. Si eso pasa, el buffer que llega aqui contiene
+    el handshake + bytes de SSH juntos. Debemos devolver esos bytes
+    "extra" (lo que vino despues del separador) para que el llamador
+    los reenvie al backend -- si los descartamos, se pierde el inicio
+    de la negociacion SSH y la conexion se cae en el intercambio de
+    llaves (bug real detectado y reproducido en pruebas)."""
     buf = b""
     while b"\r\n\r\n" not in buf:
         chunk = await reader.read(4096)
@@ -69,7 +79,8 @@ async def _read_initial_request(reader: asyncio.StreamReader) -> bytes:
         buf += chunk
         if len(buf) > 65536:  # limite de seguridad ante clientes maliciosos
             break
-    return buf
+    _headers, _, extra = buf.partition(b"\r\n\r\n")
+    return extra
 
 
 async def handle_client(
@@ -80,15 +91,28 @@ async def handle_client(
 ) -> None:
     peer = client_writer.get_extra_info("peername")
     try:
-        await _read_initial_request(client_reader)
+        leftover = await _read_initial_request(client_reader)
         client_writer.write(HANDSHAKE_RESPONSE)
         await client_writer.drain()
 
         backend_reader, backend_writer = await asyncio.open_connection(
             backend_host, backend_port
         )
+        _disable_nagle(client_writer)
+        _disable_nagle(backend_writer)
         log.info("%s -> conectado, reenviando a %s:%s", peer, backend_host, backend_port)
 
+        if leftover:
+            # Bytes de SSH que llegaron pegados al handshake HTTP en el
+            # mismo TCP write del cliente -- deben ir al backend antes
+            # de arrancar el copiado normal en ambas direcciones.
+            backend_writer.write(leftover)
+            await backend_writer.drain()
+
+        # Ambos sentidos corren en paralelo; solo cerramos los sockets
+        # cuando LOS DOS terminaron (ver comentario en _pipe). Cerrar
+        # uno apenas termina su lado cortaba el sentido contrario a
+        # mitad del intercambio de llaves SSH (bug real detectado).
         await asyncio.gather(
             _pipe(client_reader, backend_writer),
             _pipe(backend_reader, client_writer),
@@ -96,11 +120,28 @@ async def handle_client(
     except Exception as exc:  # noqa: BLE001 - queremos loguear cualquier fallo y seguir
         log.warning("%s -> error: %s", peer, exc)
     finally:
-        try:
-            client_writer.close()
-        except Exception:
-            pass
+        for w in (client_writer, locals().get("backend_writer")):
+            if w is None:
+                continue
+            try:
+                w.close()
+            except Exception:
+                pass
         log.info("%s -> conexion cerrada", peer)
+
+
+def _disable_nagle(writer: asyncio.StreamWriter) -> None:
+    """Desactiva el algoritmo de Nagle (TCP_NODELAY) para evitar que el
+    kernel retrase el envio de paquetes pequenos como los del
+    intercambio de llaves SSH esperando poder juntarlos con mas datos."""
+    import socket
+
+    sock = writer.get_extra_info("socket")
+    if sock is not None:
+        try:
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        except OSError:
+            pass
 
 
 async def main() -> None:
