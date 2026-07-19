@@ -55,8 +55,6 @@ keepalive 10 120
 cipher AES-256-GCM
 auth SHA256
 tls-version-min 1.3
-user nobody
-group nogroup
 persist-key
 persist-tun
 status /var/log/openvpn-status.log

@@ -64,10 +64,7 @@ After=network.target
 ExecStart=${BIN_PATH} --listen-addr 127.0.0.1:${port} --max-clients ${max_clients} --max-connections-for-client 15 --loglevel none
 Restart=always
 RestartSec=3
-User=nobody
-NoNewPrivileges=true
-AmbientCapabilities=CAP_NET_BIND_SERVICE
-CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+User=root
 
 [Install]
 WantedBy=multi-user.target

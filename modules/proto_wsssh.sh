@@ -43,10 +43,7 @@ After=network.target ssh.service dropbear.service
 ExecStart=/usr/bin/websockify 0.0.0.0:${ws_port} 127.0.0.1:${ssh_port}
 Restart=always
 RestartSec=3
-User=nobody
-NoNewPrivileges=true
-AmbientCapabilities=CAP_NET_BIND_SERVICE
-CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+User=root
 
 [Install]
 WantedBy=multi-user.target
