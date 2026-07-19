@@ -49,7 +49,7 @@ _first_match() {
 
 _port_ssh()       { local v; v=$(_first_match '^Port \K\d+' /etc/ssh/sshd_config); [[ "$v" == "-" ]] && echo 22 || echo "$v"; }
 _port_dropbear()  { _first_match '(?<=DROPBEAR_PORT=)\d+' /etc/default/dropbear; }
-_port_stunnel()   { _first_match '(?<=accept = )\d+' /etc/stunnel/vps-panel.conf; }
+_port_stunnel()   { _first_match '(?<=accept = )\d+' /etc/stunnel/lobopanel.conf; }
 _port_wireguard() { _first_match '(?<=ListenPort = )\d+' /etc/wireguard/wg0.conf; }
 _port_xray()      { _first_match '"port":\s*\K\d+' /usr/local/etc/xray/config.json; }
 _port_openvpn()   { _first_match '^port \K\d+' /etc/openvpn/server/server.conf; }
@@ -67,7 +67,7 @@ _installed_protocols() {
     local defs=(
         "SSH:/etc/ssh/sshd_config:_port_ssh"
         "DROPBEAR:/etc/default/dropbear:_port_dropbear"
-        "STUNNEL(TLS):/etc/stunnel/vps-panel.conf:_port_stunnel"
+        "STUNNEL(TLS):/etc/stunnel/lobopanel.conf:_port_stunnel"
         "WIREGUARD:/etc/wireguard/wg0.conf:_port_wireguard"
         "XRAY:/usr/local/etc/xray/config.json:_port_xray"
         "OPENVPN:/etc/openvpn/server/server.conf:_port_openvpn"

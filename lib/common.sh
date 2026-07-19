@@ -15,7 +15,7 @@ export C_RESET="\e[0m"
 export PANEL_BRAND="LoborojoPy"
 
 # --- Rutas base del panel ---
-export PANEL_HOME="/etc/vps-panel"
+export PANEL_HOME="/etc/lobopanel"
 export PANEL_DATA="$PANEL_HOME/data"
 export PANEL_CONF="$PANEL_HOME/panel.conf"
 export PANEL_LOGS="$PANEL_HOME/logs"

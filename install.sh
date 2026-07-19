@@ -1,9 +1,9 @@
 #!/bin/bash
 # =====================================================================
-# install.sh - Instalador maestro del VPS Panel
+# install.sh - Instalador maestro de LoboPanel
 #
-# Copia el panel a /opt/vps-panel, crea el enlace "vps-panel" en el
-# PATH, prepara /etc/vps-panel (datos/config) y registra las tareas
+# Copia el panel a /opt/lobopanel, crea el enlace "lobopanel" en el
+# PATH, prepara /etc/lobopanel (datos/config) y registra las tareas
 # de cron necesarias (expiración de usuarios y límite de conexiones).
 # =====================================================================
 set -e
@@ -19,7 +19,7 @@ if [[ ! -f /etc/debian_version ]]; then
 fi
 
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INSTALL_DIR="/opt/vps-panel"
+INSTALL_DIR="/opt/lobopanel"
 
 echo "[*] Instalando panel en ${INSTALL_DIR} ..."
 mkdir -p "$INSTALL_DIR"
@@ -27,13 +27,13 @@ cp -r "$SRC_DIR"/* "$INSTALL_DIR"/
 chmod +x "$INSTALL_DIR"/panel.sh "$INSTALL_DIR"/modules/*.sh "$INSTALL_DIR"/lib/*.sh
 
 # Enlace ejecutable global
-ln -sf "$INSTALL_DIR/panel.sh" /usr/local/bin/vps-panel
+ln -sf "$INSTALL_DIR/panel.sh" /usr/local/bin/lobopanel
 
-# Preparamos /etc/vps-panel (dirs, DB, banner por defecto)
-mkdir -p /etc/vps-panel/data/limits /etc/vps-panel/data/wg_peers /etc/vps-panel/data/xray_clients /etc/vps-panel/data/ovpn_clients /etc/vps-panel/logs
-touch /etc/vps-panel/data/users.db
-if [[ ! -f /etc/vps-panel/banner.txt ]]; then
-    cat > /etc/vps-panel/banner.txt <<'EOF'
+# Preparamos /etc/lobopanel (dirs, DB, banner por defecto)
+mkdir -p /etc/lobopanel/data/limits /etc/lobopanel/data/wg_peers /etc/lobopanel/data/xray_clients /etc/lobopanel/data/ovpn_clients /etc/lobopanel/logs
+touch /etc/lobopanel/data/users.db
+if [[ ! -f /etc/lobopanel/banner.txt ]]; then
+    cat > /etc/lobopanel/banner.txt <<'EOF'
 ============================================
    Bienvenido - Servicio VPN administrado
    Acceso autorizado unicamente.
@@ -43,12 +43,12 @@ fi
 
 # Tareas de cron: purgar usuarios vencidos (cada hora) y aplicar
 # limite de conexiones simultaneas (cada minuto)
-CRON_FILE="/etc/cron.d/vps-panel"
+CRON_FILE="/etc/cron.d/lobopanel"
 cat > "$CRON_FILE" <<EOF
-* * * * * root ${INSTALL_DIR}/modules/users.sh enforce >> /etc/vps-panel/logs/enforce.log 2>&1
-0 * * * * root ${INSTALL_DIR}/modules/users.sh purge   >> /etc/vps-panel/logs/purge.log 2>&1
+* * * * * root ${INSTALL_DIR}/modules/users.sh enforce >> /etc/lobopanel/logs/enforce.log 2>&1
+0 * * * * root ${INSTALL_DIR}/modules/users.sh purge   >> /etc/lobopanel/logs/purge.log 2>&1
 EOF
 chmod 644 "$CRON_FILE"
 
 echo "[OK] Instalación completa."
-echo "     Ejecuta el panel con: sudo vps-panel"
+echo "     Ejecuta el panel con: sudo lobopanel"

@@ -9,8 +9,8 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
 
-STUNNEL_CONF="/etc/stunnel/vps-panel.conf"
-CERT_DIR="/etc/vps-panel/certs"
+STUNNEL_CONF="/etc/stunnel/lobopanel.conf"
+CERT_DIR="/etc/lobopanel/certs"
 
 install_stunnel() {
     local listen_port="${1:-443}" backend_port="${2:-22}"
@@ -22,12 +22,12 @@ install_stunnel() {
         msg "Generando certificado autofirmado (usa el módulo SSL para uno real de Let's Encrypt)."
         openssl req -new -x509 -days 3650 -nodes \
             -out "$CERT_DIR/stunnel.pem" -keyout "$CERT_DIR/stunnel.pem" \
-            -subj "/CN=vps-panel" 2>/dev/null
+            -subj "/CN=lobopanel" 2>/dev/null
     fi
 
     cat > "$STUNNEL_CONF" <<EOF
 cert = ${CERT_DIR}/stunnel.pem
-pid = /var/run/stunnel-vps-panel.pid
+pid = /var/run/stunnel-lobopanel.pid
 socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
 sslVersionMin = TLSv1.3

@@ -64,4 +64,4 @@ echo "     ID:         $license_id"
 echo "     Vence:      $expiry"
 echo "     Max users:  $max_users (0 = sin límite)"
 echo
-echo "Entrega este archivo al cliente como /etc/vps-panel/license.lic"
+echo "Entrega este archivo al cliente como /etc/lobopanel/license.lic"
