@@ -1,4 +1,4 @@
-# VPS Panel
+# LoboPanel
 
 Panel propio de administración de VPS para un servicio de VPN/proxy
 multi-protocolo orientado a clientes que pagan por un acceso seguro
@@ -114,7 +114,7 @@ diferencia de SSH/Dropbear que solo guardan el hash del sistema).
 ## Estructura
 
 ```
-vps-panel/
+lobopanel/
 ├── panel.sh              # Menú principal interactivo
 ├── install.sh            # Instalador maestro
 ├── lib/common.sh         # Funciones y variables compartidas
@@ -138,11 +138,11 @@ vps-panel/
 
 ```bash
 sudo ./install.sh
-sudo vps-panel
+sudo lobopanel
 ```
 
-Esto instala el panel en `/opt/vps-panel`, crea el comando global
-`vps-panel`, prepara `/etc/vps-panel` (datos, banner, logs) y registra
+Esto instala el panel en `/opt/lobopanel`, crea el comando global
+`lobopanel`, prepara `/etc/lobopanel` (datos, banner, logs) y registra
 dos tareas de cron:
 - Cada minuto: aplica el límite de conexiones simultáneas por usuario.
 - Cada hora: elimina automáticamente usuarios vencidos.
@@ -177,15 +177,15 @@ DigitalOcean — el más barato) con Ubuntu 22.04/24.04, y clona el repo ahí:
 
 ```bash
 sudo apt update && sudo apt upgrade -y
-git clone https://github.com/TU_USUARIO/vps-panel.git
-cd vps-panel
-sudo touch /etc/vps-panel/trial_mode   # antes de instalar, o después: crea la carpeta primero
-sudo mkdir -p /etc/vps-panel && sudo touch /etc/vps-panel/trial_mode
+git clone https://github.com/loborojoparaguay-cyber/scriplobo.git
+cd scriplobo
+sudo touch /etc/lobopanel/trial_mode   # antes de instalar, o después: crea la carpeta primero
+sudo mkdir -p /etc/lobopanel && sudo touch /etc/lobopanel/trial_mode
 sudo ./install.sh
-sudo vps-panel
+sudo lobopanel
 ```
 
-El archivo `/etc/vps-panel/trial_mode` desactiva la verificación de licencia
+El archivo `/etc/lobopanel/trial_mode` desactiva la verificación de licencia
 solo en esa máquina — así prueba todo libremente sin generarte una licencia.
 **Bórralo antes de vender/entregar el servidor a un cliente real.**
 
@@ -217,13 +217,13 @@ sudo ./modules/license.sh machine_id
 # genera admin-tools/issued/nombre_cliente_<uuid>.lic
 
 # 4. Le envías ese .lic al cliente, y él lo coloca en su servidor:
-sudo cp nombre_cliente_xxxx.lic /etc/vps-panel/license.lic
-sudo vps-panel   # ya arranca con licencia válida
+sudo cp nombre_cliente_xxxx.lic /etc/lobopanel/license.lic
+sudo lobopanel   # ya arranca con licencia válida
 ```
 
 Si el cliente copia el `.lic` a otro servidor, la huella no coincide y el
 panel no arranca. Si quieres poder revocar licencias ya emitidas de forma
-remota, define `VPSPANEL_REVOKED_URL` apuntando a un JSON con IDs revocados
+remota, define `LOBOPANEL_REVOKED_URL` apuntando a un JSON con IDs revocados
 que tú controles (opcional, no requerido para empezar).
 
 ## Notas de seguridad

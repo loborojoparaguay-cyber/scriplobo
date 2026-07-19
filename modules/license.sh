@@ -19,10 +19,10 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
 
-LICENSE_FILE="/etc/vps-panel/license.lic"
+LICENSE_FILE="/etc/lobopanel/license.lic"
 PUBKEY_FILE="$SCRIPT_DIR/config/license_public.pem"
-TRIAL_FLAG="/etc/vps-panel/trial_mode"
-REVOKED_URL="${VPSPANEL_REVOKED_URL:-}"     # opcional: URL a un revoked.json
+TRIAL_FLAG="/etc/lobopanel/trial_mode"
+REVOKED_URL="${LOBOPANEL_REVOKED_URL:-}"     # opcional: URL a un revoked.json
 REVOKED_CACHE="$PANEL_DATA/revoked_cache.json"
 
 # ---------------------------------------------------------------------
@@ -112,22 +112,22 @@ verify_license() {
         fi
     fi
 
-    export VPSPANEL_LICENSE_ID="$license_id"
-    export VPSPANEL_LICENSE_EXPIRY="$expiry"
-    export VPSPANEL_LICENSE_MAX_USERS="$max_users"
+    export LOBOPANEL_LICENSE_ID="$license_id"
+    export LOBOPANEL_LICENSE_EXPIRY="$expiry"
+    export LOBOPANEL_LICENSE_MAX_USERS="$max_users"
     return 0
 }
 
 # ---------------------------------------------------------------------
 # Se llama al arrancar panel.sh. Permite modo prueba local (sin
-# licencia) creando manualmente /etc/vps-panel/trial_mode -- pensado
+# licencia) creando manualmente /etc/lobopanel/trial_mode -- pensado
 # para que TÚ, como desarrollador, puedas probar en tu VPS de pruebas
 # sin generarte una licencia a ti mismo cada vez.
 # ---------------------------------------------------------------------
 require_license() {
     if [[ -f "$TRIAL_FLAG" ]]; then
         warn "PANEL EN MODO PRUEBA (trial_mode activo) — sin verificación de licencia."
-        warn "Elimina /etc/vps-panel/trial_mode antes de entregar este servidor a un cliente."
+        warn "Elimina /etc/lobopanel/trial_mode antes de entregar este servidor a un cliente."
         return 0
     fi
 
@@ -147,9 +147,9 @@ show_license_info() {
     fi
     if verify_license; then
         ok "Licencia válida."
-        echo "  ID:        $VPSPANEL_LICENSE_ID"
-        echo "  Vence:     $VPSPANEL_LICENSE_EXPIRY"
-        echo "  Máx users: $VPSPANEL_LICENSE_MAX_USERS"
+        echo "  ID:        $LOBOPANEL_LICENSE_ID"
+        echo "  Vence:     $LOBOPANEL_LICENSE_EXPIRY"
+        echo "  Máx users: $LOBOPANEL_LICENSE_MAX_USERS"
     fi
 }
 

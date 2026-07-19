@@ -1,6 +1,6 @@
 #!/bin/bash
 # =====================================================================
-# panel.sh - Menú principal del VPS Panel
+# panel.sh - Menú principal de LoboPanel
 #
 # Panel propio de administración para un servicio de VPN/proxy
 # multi-protocolo orientado a clientes de pago. Une los módulos de:
@@ -11,7 +11,7 @@
 #   - Monitoreo del sistema y conexiones
 # =====================================================================
 set -o pipefail
-# Resolvemos el enlace simbólico (ej. /usr/local/bin/vps-panel) al
+# Resolvemos el enlace simbólico (ej. /usr/local/bin/lobopanel) al
 # archivo real antes de calcular SCRIPT_DIR -- si no, BASH_SOURCE[0]
 # apunta al enlace y todos los "source" de módulos fallan en silencio.
 REAL_SELF="$(readlink -f "${BASH_SOURCE[0]}")"
@@ -30,7 +30,7 @@ require_license
 header() {
     clear
     echo -e "${C_RED}============================================================${C_RESET}"
-    echo -e "${C_YELLOW}                     VPS PANEL - $1${C_RESET}"
+    echo -e "${C_YELLOW}                     LOBOPANEL - $1${C_RESET}"
     echo -e "${C_RED}============================================================${C_RESET}"
 }
 

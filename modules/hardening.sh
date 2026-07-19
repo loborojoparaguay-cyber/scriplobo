@@ -40,7 +40,7 @@ close_port() {
 
 install_fail2ban() {
     apt_install fail2ban
-    cat > /etc/fail2ban/jail.d/vps-panel.conf <<'EOF'
+    cat > /etc/fail2ban/jail.d/lobopanel.conf <<'EOF'
 [sshd]
 enabled = true
 port    = 22,442
