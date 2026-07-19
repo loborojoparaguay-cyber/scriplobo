@@ -25,6 +25,7 @@ echo "[*] Instalando panel en ${INSTALL_DIR} ..."
 mkdir -p "$INSTALL_DIR"
 cp -r "$SRC_DIR"/* "$INSTALL_DIR"/
 chmod +x "$INSTALL_DIR"/panel.sh "$INSTALL_DIR"/modules/*.sh "$INSTALL_DIR"/lib/*.sh
+[[ -d "$INSTALL_DIR/bin" ]] && chmod +x "$INSTALL_DIR"/bin/*
 
 # Enlace ejecutable global
 ln -sf "$INSTALL_DIR/panel.sh" /usr/local/bin/lobopanel

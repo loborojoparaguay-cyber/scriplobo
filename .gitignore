@@ -8,3 +8,5 @@ license_private.pem
 data/
 *.log
 *.zip
+__pycache__/
+*.pyc

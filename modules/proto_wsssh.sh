@@ -1,11 +1,12 @@
 #!/bin/bash
 # =====================================================================
-# modules/proto_wsssh.sh - WebSocket puro -> SSH/Dropbear (liviano)
+# modules/proto_wsssh.sh - WebSocket "falso" -> SSH/Dropbear (liviano)
 #
 # A diferencia de Xray (VLESS+TLS), esta opcion NO agrega una capa de
-# cifrado propia: websockify solo traduce WebSocket <-> TCP crudo,
-# reenviando el trafico directo al puerto de SSH/Dropbear. El unico
-# cifrado real que viaja es el de SSH (que ya es fuerte por si solo).
+# cifrado propia: el bridge solo responde el handshake HTTP inicial y
+# despues reenvia el trafico crudo directo al puerto de SSH/Dropbear.
+# El unico cifrado real que viaja es el de SSH (que ya es fuerte por
+# si solo).
 #
 # Resultado: una sola capa de cifrado en vez de dos o tres -- mucho
 # menos trabajo de CPU para el cliente. Ideal para celulares viejos o
@@ -13,34 +14,44 @@
 #
 # Dos modos:
 #   - Sin TLS (ws://)  -> lo mas liviano posible, pero el handshake
-#     inicial de WebSocket viaja sin cifrar (el contenido SSH adentro
-#     SI esta cifrado por SSH mismo).
+#     inicial viaja sin cifrar (el contenido SSH adentro SI esta
+#     cifrado por SSH mismo).
 #   - Con TLS (wss://) -> agrega Stunnel delante (ver proto_stunnel.sh)
-#     para cifrar tambien el handshake WebSocket. Un poco mas de CPU,
-#     pero sigue siendo mas liviano que Xray porque no hay parsing de
-#     VLESS de por medio.
+#     para cifrar tambien el handshake. Un poco mas de CPU, pero sigue
+#     siendo mas liviano que Xray porque no hay parsing de VLESS de
+#     por medio.
 #
-# Software: websockify (novnc/websockify, LGPL, paquete oficial de
-# Ubuntu/Debian). https://github.com/novnc/websockify
+# Por que un script propio (bin/raw_ws_bridge.py) en vez de websockify:
+#
+# websockify implementa el protocolo WebSocket real (RFC 6455) y
+# envuelve cada paquete en un frame binario propio. Apps de Android
+# como HTTP Custom / HTTP Injector / NPV Tunnel NO hablan WebSocket de
+# verdad: solo mandan un handshake HTTP para "camuflar" el trafico y
+# despues esperan bytes crudos, sin ningun framing -- igual que un
+# tunel HTTP CONNECT simple. Con websockify, sshd recibia los bytes
+# envueltos en frames en vez del banner SSH limpio y la conexion se
+# caia con "kex_exchange_identification". El bridge propio evita el
+# problema por completo: nunca genera frames, solo copia bytes.
 # =====================================================================
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
 
 WS_SERVICE="/etc/systemd/system/ws-ssh.service"
 WS_PORT_DEFAULT=8880
+WS_BRIDGE_SCRIPT="$SCRIPT_DIR/bin/raw_ws_bridge.py"
 
 install_wsssh() {
     local ws_port="${1:-$WS_PORT_DEFAULT}" ssh_port="${2:-22}"
 
-    apt_install websockify
+    apt_install python3
 
     cat > "$WS_SERVICE" <<EOF
 [Unit]
-Description=WebSocket -> SSH/Dropbear bridge (websockify, sin capa TLS propia)
+Description=WebSocket (falso, bytes crudos) -> SSH/Dropbear bridge
 After=network.target ssh.service dropbear.service
 
 [Service]
-ExecStart=/usr/bin/websockify 0.0.0.0:${ws_port} 127.0.0.1:${ssh_port}
+ExecStart=/usr/bin/python3 ${WS_BRIDGE_SCRIPT} ${ws_port} 127.0.0.1:${ssh_port}
 Restart=always
 RestartSec=3
 User=root
